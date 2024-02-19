@@ -1,19 +1,24 @@
 #include "game.h"
 #include "logger.h"
+#include "allocator.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-void init_ouroboros(struct Ouroboros *p, u64 size) {
-    p->data = (u32 *)malloc(sizeof(u32) * size);
+struct Ouroboros *create_ouroboros(u64 size) {
+    struct Ouroboros *p = (struct Ouroboros *)salloc(sizeof(struct Ouroboros));
+    p->data = (u32 *)salloc(sizeof(u32) * size);
     p->max = size;
     p->len = 0;
-    p->start = 10;
+    p->start = size / 2;
+
+    return p;
 }
 
 void destroy_ouroboros(struct Ouroboros *p) {
-    free(p->data);
+    sfree(p->data);
+    sfree(p);
 }
 
 void ouroboros_push_front(struct Ouroboros *p, u32 i) {
@@ -51,15 +56,24 @@ u32 ouroboros_pop_back(struct Ouroboros *p) {
     return *ouroboros_at(p, p->len);
 }
 
-void init_grids(struct Grids *p, u64 size) {
-    p->data = (bool *)malloc(sizeof(bool) * size);
+void ouroboros_reset(struct Ouroboros *p) {
+    p->len = 0;
+    p->start = p->max / 2;
+}
+
+struct Grids *create_grids(u64 size) {
+    struct Grids *p = (struct Grids *)salloc(size);
+    p->data = (bool *)salloc(sizeof(bool) * size);
     memset(p->data, 0, sizeof(bool) * size);
     p->max = size;
     p->occupied = 0;
+
+    return p;
 }
 
 void destroy_grids(struct Grids *p) {
-    free(p->data);
+    sfree(p->data);
+    sfree(p);
 }
 
 void grids_set_true(struct Grids *p, u64 pos) {
@@ -80,6 +94,11 @@ bool grids_at(struct Grids *p, u64 pos) {
     return p->data[pos];
 }
 
+void grids_reset(struct Grids *p) {
+    memset(p->data, 0, sizeof(bool) * p->max);
+    p->occupied = 0;
+}
+
 u32 generate_apple(struct Grids *g) {
     int a = rand() % (g->max - g->occupied);
 
@@ -96,15 +115,18 @@ u32 generate_apple(struct Grids *g) {
     return 0;
 }
 
-void init_game(struct Game *p) {
-    p->grids = malloc(sizeof(struct Grids));
-    init_grids(p->grids, GRID_COUNT);
-    p->snake = malloc(sizeof(struct Ouroboros));
-    init_ouroboros(p->snake, GRID_COUNT);
+struct Game *create_game(void) {
+    struct Game *p = (struct Game *)salloc(sizeof(struct Game));
+    p->grids = create_grids(GRID_COUNT);
+    p->snake = create_ouroboros(GRID_COUNT);
+
+    return p;
+}
+
+void game_init(struct Game *p) {
     p->dead = false;
     p->direction = SNAKE_DIRECTION_LEFT;
 
-    srand(time(NULL));
     /* set initial snake */
     for (int i = 0; i < 3; i++) {
         int j = GRID_COUNT / 2 + GRID_WIDTH / 2 + i;
@@ -112,14 +134,20 @@ void init_game(struct Game *p) {
         grids_set_true(p->grids, j);
     }
 
+    srand(time(NULL));
     p->apple = generate_apple(p->grids);
+}
+
+void game_reset(struct Game *p) {
+    ouroboros_reset(p->snake);
+    grids_reset(p->grids);
+    game_init(p);
 }
 
 void destroy_game(struct Game *p) {
     destroy_ouroboros(p->snake);
-    free(p->snake);
     destroy_grids(p->grids);
-    free(p->grids);
+    sfree(p);
 }
 
 void game_change_direction(struct Game *p, enum SnakeDirection direction) {

@@ -1,0 +1,39 @@
+#+title: readme
+
+This is an example project of using the latest SDL3 library to make
+the snake game.
+
+* Dependencies
+1. clang / gcc
+2. SDL3
+
+* Installing SDL3
+Since the SDL3 is still in the developement stage, most package
+manager does not have SDL3 in it. (From my observation, only the Arch
+AUR has it, not even Gentoo.) You better build it yourself, the
+installation instruction is very clear in the SDL3 github page.
+
+If you want to install SDL3, you also need cmake. [[https://github.com/libsdl-org/SDL/blob/main/docs/README-cmake.md][Here]] is the official
+instruction.
+
+* Graphics
+I used to care a lot about graphics API, but from my disastrous
+experience of learning a lot of different API, if you only want to
+render simple 2D games, using the FUCKING built-in function of SDL.
+
+It makes porting to different platform much simpler.
+
+If you are intended to write 3D games, webgpu is something you should
+be looking into.
+
+* wasm
+SDL and Emscripten have been enabling us to port games to the web via
+wasm for some time. Emscripten even has SDL support, making them a
+perfect match.
+
+However, SDL3 is not stable yet. You have to compile the static
+library of wasm SDL3 on your own. [[https://github.com/libsdl-org/SDL/blob/main/docs/README-emscripten.md][Here]] is the instruction. Very
+simple, takes no time.
+
+If you want to compile to wasm, put the compiled libSDL3.a in the root
+of project.

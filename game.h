@@ -11,12 +11,13 @@ struct Ouroboros {
     u64 start;
 };
 
-void init_ouroboros(struct Ouroboros *p, u64 size);
+struct Ouroboros *create_ouroboros(u64 size);
 void destroy_ouroboros(struct Ouroboros *p);
 void ouroboros_push_front(struct Ouroboros *p, u32 i);
 void ouroboros_push_back(struct Ouroboros *p, u32 i);
 u32 ouroboros_pop_back(struct Ouroboros *p);
 u32 *ouroboros_at(struct Ouroboros *p, u64 pos);
+void ouroboros_reset(struct Ouroboros *p);
 
 struct Grids {
     bool *data;
@@ -24,10 +25,11 @@ struct Grids {
     u64 occupied;
 };
 
-void init_grids(struct Grids *p, u64 size);
+struct Grids *create_grids(u64 size);
 void destroy_grids(struct Grids *p);
 void grids_set_true(struct Grids *p, u64 pos);
 void grids_set_false(struct Grids *p, u64 pos);
+void grids_reset(struct Grids *p);
 
 enum SnakeDirection {
     SNAKE_DIRECTION_UP = 0,
@@ -44,9 +46,11 @@ struct Game {
     enum SnakeDirection direction;
 };
 
-void init_game(struct Game *p);
+struct Game *create_game(void);
+void game_init(struct Game *p);
 void destroy_game(struct Game *p);
 void game_change_direction(struct Game *p, enum SnakeDirection direction);
 void game_tick(struct Game *p);
+void game_reset(struct Game *p);
 
 #endif /* GAME_H */
