@@ -23,7 +23,7 @@ struct App *create_app(void) {
         exit(1);
     }
 
-    p->renderer = SDL_CreateRenderer(p->window, NULL, SDL_RENDERER_ACCELERATED);
+    p->renderer = SDL_CreateRenderer(p->window, NULL);
     if (p->renderer == NULL) {
         FATAL("cannot create renderer %s", SDL_GetError());
         exit(1);
@@ -71,17 +71,17 @@ void app_process_input(struct App *p) {
             p->running = false;
             break;
         case SDL_EVENT_KEY_DOWN:
-            switch (e.key.keysym.sym) {
-            case SDLK_w:
+            switch (e.key.key) {
+            case SDLK_W:
                 local_direction = SNAKE_DIRECTION_UP;
                 break;
-            case SDLK_d:
+            case SDLK_D:
                 local_direction = SNAKE_DIRECTION_RIGHT;
                 break;
-            case SDLK_a:
+            case SDLK_A:
                 local_direction = SNAKE_DIRECTION_LEFT;
                 break;
-            case SDLK_s:
+            case SDLK_S:
                 local_direction = SNAKE_DIRECTION_DOWN;
                 break;
             case SDLK_SPACE:
