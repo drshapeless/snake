@@ -2,6 +2,7 @@
 #define DEFINES_H
 
 #include <SDL3/SDL.h>
+#include <stdbool.h>
 
 typedef Uint8 u8;
 typedef Uint16 u16;
