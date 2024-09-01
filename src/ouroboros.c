@@ -5,7 +5,7 @@
 
 #include <strings.h>
 
-Ouroboros *initOuroboros(u64 size) {
+Ouroboros *createOuroboros(u64 size) {
     Ouroboros *p = slMalloc(sizeof(Ouroboros));
     p->data = slMalloc(sizeof(u32) * size);
     p->max = size;
@@ -14,7 +14,7 @@ Ouroboros *initOuroboros(u64 size) {
     return p;
 }
 
-void initOuroborosWithAllocatedMemory(Ouroboros *p, void *mem, u64 size) {
+void createOuroborosWithAllocatedMemory(Ouroboros *p, void *mem, u64 size) {
     p->data = mem;
     p->max = size;
     resetOuroboros(p);
@@ -30,7 +30,7 @@ void resetOuroboros(Ouroboros *p) {
     p->start = p->max / 2;
 }
 
-u32 *OuroborosAt(Ouroboros *p, u64 pos) {
+u32 *ouroborosAt(Ouroboros *p, u64 pos) {
     if (pos >= p->len) {
         ERROR("ouroboros pos > len")
         return NULL;
@@ -43,8 +43,8 @@ u32 *OuroborosAt(Ouroboros *p, u64 pos) {
     }
 }
 
-void OuroborosSet(Ouroboros *p, u64 pos, u32 val) {
-    u32 *n = OuroborosAt(p, pos);
+void ouroborosSet(Ouroboros *p, u64 pos, u32 val) {
+    u32 *n = ouroborosAt(p, pos);
     if (n == NULL) {
         return;
     }
@@ -52,17 +52,17 @@ void OuroborosSet(Ouroboros *p, u64 pos, u32 val) {
     *n = val;
 }
 
-void OuroborosPushBack(Ouroboros *p, u32 val) {
+void ouroborosPushBack(Ouroboros *p, u32 val) {
     if (p->len + 1 >= p->max) {
         ERROR("push back out of bound");
         return;
     }
 
-    OuroborosSet(p, p->len, val);
+    ouroborosSet(p, p->len, val);
     p->len += 1;
 }
 
-void OuroborosPushFront(Ouroboros *p, u32 val) {
+void ouroborosPushFront(Ouroboros *p, u32 val) {
     if (p->len + 1 >= p->max) {
         ERROR("push frount out of bound");
         return;
@@ -79,7 +79,7 @@ void OuroborosPushFront(Ouroboros *p, u32 val) {
     }
 }
 
-u32 OuroborosPopBack(Ouroboros *p) {
+u32 ouroborosPopBack(Ouroboros *p) {
     if (p->len - 1 < 0) {
         ERROR("pop back on empty ouroboros");
         return 0;
@@ -87,16 +87,16 @@ u32 OuroborosPopBack(Ouroboros *p) {
 
     p->len -= 1;
 
-    return *OuroborosAt(p, p->len);
+    return *ouroborosAt(p, p->len);
 }
 
-u32 OuroborosPopFront(Ouroboros *p) {
+u32 ouroborosPopFront(Ouroboros *p) {
     if (p->len - 1 < 0) {
         ERROR("pop front on empty ouroboros");
         return 0;
     }
 
-    u32 v = *OuroborosAt(p, 0);
+    u32 v = *ouroborosAt(p, 0);
 
     if (p->start + 1 >= p->max) {
         p->start = 0;
@@ -109,7 +109,7 @@ u32 OuroborosPopFront(Ouroboros *p) {
     return v;
 }
 
-u64 OuroborosArray(Ouroboros *p, u32 *arr) {
+u64 ouroborosArray(Ouroboros *p, u32 *arr) {
     if (p->start + p->len < p->max) {
         memcpy(arr, p->data + p->start, p->len);
     } else {
@@ -119,4 +119,8 @@ u64 OuroborosArray(Ouroboros *p, u32 *arr) {
     }
 
     return p->len;
+}
+
+u32 ouroborosHead(Ouroboros *p) {
+    return *ouroborosAt(p, 0);
 }

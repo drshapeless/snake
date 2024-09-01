@@ -9,21 +9,23 @@ typedef struct Ouroboros {
     u64 start;
 } Ouroboros;
 
-Ouroboros *initOuroboros(u64 size);
-void initOuroborosWithAllocatedMemory(Ouroboros *p, void *mem, u64 size);
+Ouroboros *createOuroboros(u64 size);
+void createOuroborosWithAllocatedMemory(Ouroboros *p, void *mem, u64 size);
 void destroyOuroboros(Ouroboros *p);
 void resetOuroboros(Ouroboros *p);
-void OuroborosPushBack(Ouroboros *p, u32 val);
-void OuroborosPushFront(Ouroboros *p, u32 val);
+void ouroborosPushBack(Ouroboros *p, u32 val);
+void ouroborosPushFront(Ouroboros *p, u32 val);
 
 /* Return the value of the removed data. */
-u32 OuroborosPopBack(Ouroboros *p);
+u32 ouroborosPopBack(Ouroboros *p);
 
 /* Return the value of the removed data. */
-u32 OuroborosPopFront(Ouroboros *p);
+u32 ouroborosPopFront(Ouroboros *p);
 
 /* Assume the memory is sufficient, no checking. */
 /* Return the len of the array. */
-u64 OuroborosArray(Ouroboros *p, u32 *arr);
+u64 ouroborosArray(Ouroboros *p, u32 *arr);
+
+u32 ouroborosHead(Ouroboros *p);
 
 #endif /* OUROBOROS_H */
