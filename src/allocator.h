@@ -3,7 +3,8 @@
 
 #include "defines.h"
 
-void *salloc(u64 size);
-void sfree(void *p);
+void *slMalloc(u64 size);
+void *slRealloc(void *ptr, u64 size);
+void slFree(void *ptr);
 
 #endif /* ALLOCATOR_H */
