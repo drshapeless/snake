@@ -2,12 +2,14 @@
 #define SNAKE_H
 
 #include "ouroboros.h"
+#include "grid.h"
 #include "defines.h"
 
 typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 
 typedef struct Snake {
     Ouroboros *body;
+    Grid *grid;
     u64 width;
     u64 height;
     bool is_dead;

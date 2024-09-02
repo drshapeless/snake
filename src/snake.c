@@ -5,6 +5,7 @@
 Snake *createSnake(u64 size, u64 w, u64 h) {
     Snake *p = slMalloc(sizeof(Snake));
     p->body = createOuroboros(size);
+    p->grid = createGrid(size);
     p->width = w;
     p->height = h;
     p->is_dead = false;
@@ -71,6 +72,8 @@ void tickSnake(Snake *p) {
         }
         break;
     }
+
+    /* check collision with body */
 
     ouroborosPushFront(p->body, next_head);
     if (next_head == p->apple) {
