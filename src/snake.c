@@ -24,6 +24,7 @@ void createSnakeWithAllocatedMemory(Snake *p, u64 w, u64 h, void *mem,
 }
 
 void destroySnake(Snake *p) {
+    destroyGrid(p->grid);
     destroyOuroboros(p->body);
     slFree(p);
 }
