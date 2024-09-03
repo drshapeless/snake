@@ -25,7 +25,6 @@ Application *createApplication() {
         ERROR("%s", SDL_GetError());
         exit(1);
     }
-
     app->renderer = createRenderer(app->window);
     app->snake =
         createSnake(WINDOW_WIDTH / SQUARE_SIZE, WINDOW_HEIGHT / SQUARE_SIZE);
@@ -38,6 +37,7 @@ void destroyApplication(Application *app) {
     destroyRenderer(app->renderer);
     SDL_DestroyWindow(app->window);
     SDL_Quit();
+    slFree(app);
 }
 
 void applicationRun(Application *app) {
