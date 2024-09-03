@@ -1,10 +1,8 @@
 #include "grid.h"
 
-#include "logger.h"
 #include "allocator.h"
 
 #include <string.h>
-
 #include <limits.h> /* for CHAR_BIT */
 
 #define BITMASK(b) (1 << ((b) % CHAR_BIT))
@@ -16,9 +14,10 @@
 
 Grid *createGrid(u64 size) {
     Grid *p = slMalloc(sizeof(Grid));
-    p->data = slMalloc(sizeof(char) * BITNSLOTS(size));
+    int temp = BITNSLOTS(size);
+    p->data = slMalloc(sizeof(u8) * temp);
     p->size = size;
-    memset(p->data, 0, sizeof(bool) * p->size);
+    memset(p->data, 0, temp);
 
     return p;
 }
@@ -29,7 +28,7 @@ void destroyGrid(Grid *p) {
 }
 
 void gridReset(Grid *p) {
-    memset(p->data, 0, sizeof(char) * p->size);
+    memset(p->data, 0, BITNSLOTS(p->size));
 }
 
 bool gridGet(Grid *p, u64 pos) {

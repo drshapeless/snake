@@ -6,7 +6,7 @@
 /* This holds a bunch of bool in bit */
 /* The data will be aligned with byte*/
 typedef struct Grid {
-    char *data;
+    u8 *data;
     u64 size;
 } Grid;
 
