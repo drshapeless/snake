@@ -32,7 +32,7 @@ void ouroborosReset(Ouroboros *p) {
 
 u64 *ouroborosAt(Ouroboros *p, u64 pos) {
     if (pos >= p->len) {
-        ERROR("ouroboros pos > len, pos %lu, len %lu", pos, p->len);
+        ERROR("ouroboros pos > len, pos %llu, len %llu", pos, p->len);
         return NULL;
     }
 
