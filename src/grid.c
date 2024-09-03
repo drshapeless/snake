@@ -5,14 +5,18 @@
 
 #include <string.h>
 
-Grid *createGrid(u64 size) {
-    /* if (size % 8 != 0) { */
-    /*     ERROR("grid invalid create size\n"); */
-    /*     return NULL; */
-    /* } */
+#include <limits.h> /* for CHAR_BIT */
 
+#define BITMASK(b) (1 << ((b) % CHAR_BIT))
+#define BITSLOT(b) ((b) / CHAR_BIT)
+#define BITSET(a, b) ((a)[BITSLOT(b)] |= BITMASK(b))
+#define BITCLEAR(a, b) ((a)[BITSLOT(b)] &= ~BITMASK(b))
+#define BITTEST(a, b) ((a)[BITSLOT(b)] & BITMASK(b))
+#define BITNSLOTS(nb) ((nb + CHAR_BIT - 1) / CHAR_BIT)
+
+Grid *createGrid(u64 size) {
     Grid *p = slMalloc(sizeof(Grid));
-    p->data = slMalloc(sizeof(bool) * size);
+    p->data = slMalloc(sizeof(char) * BITNSLOTS(size));
     p->size = size;
     memset(p->data, 0, sizeof(bool) * p->size);
 
@@ -25,37 +29,19 @@ void destroyGrid(Grid *p) {
 }
 
 void gridReset(Grid *p) {
-    memset(p->data, 0, sizeof(bool) * p->size);
+    memset(p->data, 0, sizeof(char) * p->size);
 }
 
 bool gridGet(Grid *p, u64 pos) {
-    /* u64 i = pos / 8; */
-    /* u64 remain = pos % 8; */
-
-    /* char *ptr = (char *)p->data; */
-    /* u64 cmp = ptr[i]; */
-    /* if (cmp & (1 << remain)) { */
-    /*     return true; */
-    /* } else { */
-    /*     return false; */
-    /* } */
-
-    return p->data[pos];
+    return BITTEST(p->data, pos);
 }
 
 void gridSet(Grid *p, u64 pos, bool val) {
-    /* u64 i = pos / 8; */
-    /* u64 remain = pos % 8; */
-
-    /* u8 *ptr = (u8 *)p->data; */
-    /* u8 temp = ptr[i]; */
-    /* if (val) { */
-    /*     ptr[i] = temp | (u8)(1 << pos); */
-    /* } else { */
-    /*     ptr[i] = temp & ~(u8)(1 << pos); */
-    /* } */
-
-    p->data[pos] = val;
+    if (val) {
+        BITSET(p->data, pos);
+    } else {
+        BITCLEAR(p->data, pos);
+    }
 }
 
 u64 gridEmptyArray(Grid *p, u64 *arr) {
