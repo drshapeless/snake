@@ -1,0 +1,20 @@
+#ifndef RENDERER_H
+#define RENDERER_H
+
+#include <SDL3/SDL.h>
+#include "defines.h"
+
+typedef struct Renderer {
+    SDL_Renderer *r;
+} Renderer;
+
+Renderer *createRenderer(SDL_Window *w);
+void destroyRenderer(Renderer *p);
+void rendererSetDrawColor(Renderer *p, SDL_Color color);
+void rendererDrawRect(Renderer *p, SDL_FRect *rect);
+void rendererFillRect(Renderer *p, SDL_FRect *rect);
+void rendererFillRects(Renderer *p, SDL_FRect *rects, u64 len);
+void rendererClear(Renderer *p);
+void rendererPresent(Renderer *p);
+
+#endif /* RENDERER_H */

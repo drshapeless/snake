@@ -6,7 +6,7 @@
 /* This holds a bunch of bool in bit */
 /* The data will be aligned with byte*/
 typedef struct Grid {
-    void *data;
+    bool *data;
     u64 size;
 } Grid;
 
@@ -18,5 +18,7 @@ void destroyGrid(Grid *p);
 void gridReset(Grid *p);
 void gridSet(Grid *p, u64 pos, bool val);
 bool gridGet(Grid *p, u64 pos);
+u64 gridEmptyArray(Grid *p, u64 *arr);
+u64 gridArray(Grid *p, u64 *arr);
 
 #endif /* GRID_H */

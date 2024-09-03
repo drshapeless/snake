@@ -4,8 +4,9 @@
 #include "ouroboros.h"
 #include "grid.h"
 #include "defines.h"
+#include "renderer.h"
 
-typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
+typedef enum Direction { UP = 0, LEFT, DOWN, RIGHT } Direction;
 
 typedef struct Snake {
     Ouroboros *body;
@@ -14,13 +15,15 @@ typedef struct Snake {
     u64 height;
     bool is_dead;
     Direction direction;
-    u32 apple;
+    u64 apple;
 } Snake;
 
-Snake *createSnake(u64 size, u64 w, u64 h);
+Snake *createSnake(u64 w, u64 h);
 void createSnakeWithAllocatedMemory(Snake *p, u64 w, u64 h, void *mem,
                                     u64 size);
 void destroySnake(Snake *p);
-void tickSnake(Snake *p);
+void initSnake(Snake *p);
+void snakeTick(Snake *p);
+void snakeDraw(Snake *s, Renderer *r);
 
 #endif /* SNAKE_H */
