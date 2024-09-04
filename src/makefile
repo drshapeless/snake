@@ -1,7 +1,7 @@
 include config.mk
 
 SRC = $(wildcard *.c)
-OBJ = $(SRC:.c=.o)
+OBJ = $(SRC:.c=.o) vk_mem_alloc.o
 
 all: $(BIN)
 
