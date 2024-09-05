@@ -14,4 +14,29 @@ static const SDL_Color COLOR_GRAY = { 100, 100, 100, 255 };
 static const SDL_Color COLOR_WHITE = { 255, 255, 255, 255 };
 static const SDL_Color COLOR_RED = { 255, 0, 0, 255 };
 
+/* Vulkan engine */
+#include <vulkan/vulkan.h>
+#ifdef NDEBUG
+static const bool enableValidationLayers = false;
+#else
+static const bool enableValidationLayers = true;
+#endif
+
+static const char *validationLayers[] = { "VK_LAYER_KHRONOS_validation" };
+static const int validationLayerCount = 1;
+
+#ifdef __APPLE__
+#include <vulkan/vulkan_beta.h>
+/* dirty fix for moltenvk */
+static const char *deviceExtensions[] = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
+};
+static const int deviceExtensionCount = 2;
+#else
+static const char *deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+static const int deviceExtensionCount = 1;
+#endif
+
+static const int MAX_FRAMES_IN_FLIGHT = 2;
+
 #endif /* CONFIG_H */
