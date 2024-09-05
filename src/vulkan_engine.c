@@ -62,6 +62,32 @@ bool checkValidationLayerSupport() {
     return ret;
 }
 
+const char **getRequiredExtensions(u32 *extension_count) {
+    u32 sdl_extension_count = 0;
+    const char *const *sdl_extensions;
+
+    sdl_extensions = SDL_Vulkan_GetInstanceExtensions(&sdl_extension_count);
+
+    *extension_count = sdl_extension_count;
+    const char **extensions = slMalloc(sizeof(char **) * sdl_extension_count);
+
+    if (enableValidationLayers) {
+        extensions = slRealloc(extensions, *extension_count + 1);
+        extensions[*extension_count] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+        *extension_count += 1;
+    }
+
+    /* Not sure if this is still needed for macOS */
+    /* #ifdef __APPLE__ */
+    /*     extensions = slRealloc(extensions, *extension_count + 1); */
+    /*     extensions[*extensionCount] = */
+    /*         VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME; */
+    /*     *extensionCount += 1; */
+    /* #endif */
+
+    return extensions;
+}
+
 void createInstance(VkInstance *instance) {
     if (enableValidationLayers && !checkValidationLayerSupport()) {
         ERROR("validation layers requested, but not available!");
@@ -80,7 +106,14 @@ void createInstance(VkInstance *instance) {
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
 
-    /* TODO: extensions support */
+    u32 extension_count = 0;
+    const char **extensions = getRequiredExtensions(&extension_count);
+    createInfo.enabledExtensionCount = extension_count;
+    createInfo.ppEnabledExtensionNames = extensions;
+#ifdef __APPLE__
+    createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
+
     /* TODO: debug messenger */
 
     if (vkCreateInstance(&createInfo, NULL, instance) != VK_SUCCESS) {
