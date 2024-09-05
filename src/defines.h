@@ -15,4 +15,20 @@ typedef Sint64 i64;
 typedef float f32;
 typedef double f64;
 
+#define max(a, b)               \
+    ({                          \
+        __typeof__(a) _a = (a); \
+        __typeof__(b) _b = (b); \
+        _a > _b ? _a : _b;      \
+    })
+
+#define min(a, b)               \
+    ({                          \
+        __typeof__(a) _a = (a); \
+        __typeof__(b) _b = (b); \
+        _a < _b ? _a : _b;      \
+    })
+
+#define CLAMP(x, upper, lower) (min(upper, max(x, lower)))
+
 #endif /* DEFINES_H */
