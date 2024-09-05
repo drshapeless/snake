@@ -27,13 +27,46 @@ void createSurface(VulkanEngine *e);
 
 void initVulkan(VulkanEngine *e) {
     createInstance(&e->instance);
+    createSurface(e);
     selectPhysicalDevice(e);
     createLogicalDevice(e);
-    createSurface(e);
+}
+
+bool checkValidationLayerSupport() {
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, NULL);
+    VkLayerProperties *availableLayers =
+        slMalloc(sizeof(VkLayerProperties) * layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
+
+    bool ret = true;
+
+    for (int i = 0; i < validationLayerCount; i++) {
+        bool layerFound = false;
+        for (int j = 0; j < layerCount; j++) {
+            if (strcmp(validationLayers[i], availableLayers[j].layerName) ==
+                0) {
+                layerFound = true;
+                break;
+            }
+        }
+
+        if (!layerFound) {
+            ret = false;
+            break;
+        }
+    }
+
+    slFree(availableLayers);
+
+    return ret;
 }
 
 void createInstance(VkInstance *instance) {
-    /* TODO: check validation layer support */
+    if (enableValidationLayers && !checkValidationLayerSupport()) {
+        ERROR("validation layers requested, but not available!");
+        exit(EXIT_FAILURE);
+    }
 
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
