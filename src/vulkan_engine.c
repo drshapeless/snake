@@ -39,7 +39,7 @@ bool checkValidationLayerSupport() {
         slMalloc(sizeof(VkLayerProperties) * layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
 
-    bool ret = true;
+    bool isSupport = true;
 
     for (int i = 0; i < validationLayerCount; i++) {
         bool layerFound = false;
@@ -52,24 +52,24 @@ bool checkValidationLayerSupport() {
         }
 
         if (!layerFound) {
-            ret = false;
+            isSupport = false;
             break;
         }
     }
 
     slFree(availableLayers);
 
-    return ret;
+    return isSupport;
 }
 
 const char **getRequiredExtensions(u32 *extension_count) {
-    u32 sdl_extension_count = 0;
-    const char *const *sdl_extensions;
+    u32 sdlExtensionCount = 0;
+    const char *const *sdlExtensions;
 
-    sdl_extensions = SDL_Vulkan_GetInstanceExtensions(&sdl_extension_count);
+    sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
 
-    *extension_count = sdl_extension_count;
-    const char **extensions = slMalloc(sizeof(char **) * sdl_extension_count);
+    *extension_count = sdlExtensionCount;
+    const char **extensions = slMalloc(sizeof(char **) * sdlExtensionCount);
 
     if (enableValidationLayers) {
         extensions = slRealloc(extensions, *extension_count + 1);
@@ -86,6 +86,29 @@ const char **getRequiredExtensions(u32 *extension_count) {
     /* #endif */
 
     return extensions;
+}
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL
+debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+              VkDebugUtilsMessageTypeFlagsEXT messageType,
+              const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+              void *pUserData) {
+    DEBUG("validation layer: %s", pCallbackData->pMessage);
+
+    return VK_FALSE;
+}
+
+void populateDebugMessengerCreateInfo(
+    VkDebugUtilsMessengerCreateInfoEXT *createInfo) {
+    createInfo->sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    createInfo->messageSeverity =
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    createInfo->messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                              VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                              VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    createInfo->pfnUserCallback = debugCallback;
 }
 
 void createInstance(VkInstance *instance) {
@@ -106,15 +129,25 @@ void createInstance(VkInstance *instance) {
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
 
-    u32 extension_count = 0;
-    const char **extensions = getRequiredExtensions(&extension_count);
-    createInfo.enabledExtensionCount = extension_count;
+    u32 extensionCount = 0;
+    const char **extensions = getRequiredExtensions(&extensionCount);
+    createInfo.enabledExtensionCount = extensionCount;
     createInfo.ppEnabledExtensionNames = extensions;
 #ifdef __APPLE__
     createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
 
-    /* TODO: debug messenger */
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = { 0 };
+    if (enableValidationLayers) {
+        createInfo.enabledLayerCount = validationLayerCount;
+        createInfo.ppEnabledLayerNames = validationLayers;
+        populateDebugMessengerCreateInfo(&debugCreateInfo);
+        createInfo.pNext =
+            (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
+    } else {
+        createInfo.enabledLayerCount = 0;
+        createInfo.pNext = NULL;
+    }
 
     if (vkCreateInstance(&createInfo, NULL, instance) != VK_SUCCESS) {
         ERROR("Failed to create Vulkan instance");
@@ -123,22 +156,22 @@ void createInstance(VkInstance *instance) {
 }
 
 void selectPhysicalDevice(VulkanEngine *e) {
-    u32 device_count = 0;
-    vkEnumeratePhysicalDevices(e->instance, &device_count, NULL);
-    if (device_count == 0) {
+    u32 deviceCount = 0;
+    vkEnumeratePhysicalDevices(e->instance, &deviceCount, NULL);
+    if (deviceCount == 0) {
         ERROR("Failed to find GPUs with Vulkan support!");
         exit(EXIT_FAILURE);
     }
 
-    VkPhysicalDevice *devices = malloc(sizeof(VkPhysicalDevice) * device_count);
-    vkEnumeratePhysicalDevices(e->instance, &device_count, devices);
+    VkPhysicalDevice *devices = malloc(sizeof(VkPhysicalDevice) * deviceCount);
+    vkEnumeratePhysicalDevices(e->instance, &deviceCount, devices);
 
     /* loop the device, select with desire feature */
     /* TODO: omit it for now, select the first gpu */
-    e->physical_device = devices[0];
+    e->physicalDevice = devices[0];
 
     free(devices);
-    if (e->physical_device == VK_NULL_HANDLE) {
+    if (e->physicalDevice == VK_NULL_HANDLE) {
         ERROR("Failed to find a suitable GPU!");
         exit(EXIT_FAILURE);
     }
@@ -163,7 +196,7 @@ void createLogicalDevice(VulkanEngine *e) {
     createInfo.pQueueCreateInfos = &queueCreateInfo;
     createInfo.pEnabledFeatures = &deviceFeatures;
 
-    if (vkCreateDevice(e->physical_device, &createInfo, NULL, &e->device) !=
+    if (vkCreateDevice(e->physicalDevice, &createInfo, NULL, &e->device) !=
         VK_SUCCESS) {
         ERROR("Failed to create logical device!");
         exit(EXIT_FAILURE);

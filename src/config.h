@@ -23,7 +23,7 @@ static const bool enableValidationLayers = true;
 #endif
 
 static const char *validationLayers[] = { "VK_LAYER_KHRONOS_validation" };
-static const int validationLayerCount = 1;
+static const i32 validationLayerCount = 1;
 
 #ifdef __APPLE__
 #include <vulkan/vulkan_beta.h>
@@ -31,12 +31,12 @@ static const int validationLayerCount = 1;
 static const char *deviceExtensions[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
 };
-static const int deviceExtensionCount = 2;
+static const i32 deviceExtensionCount = 2;
 #else
 static const char *deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-static const int deviceExtensionCount = 1;
+static const i32 deviceExtensionCount = 1;
 #endif
 
-static const int MAX_FRAMES_IN_FLIGHT = 2;
+static const i32 MAX_FRAMES_IN_FLIGHT = 2;
 
 #endif /* CONFIG_H */

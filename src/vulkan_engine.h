@@ -7,7 +7,7 @@
 typedef struct VulkanEngine {
     SDL_Window *window;
     VkInstance instance;
-    VkPhysicalDevice physical_device;
+    VkPhysicalDevice physicalDevice;
     VkDevice device;
     VkSurfaceKHR surface;
 } VulkanEngine;
