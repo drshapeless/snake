@@ -31,4 +31,6 @@ typedef double f64;
 
 #define CLAMP(x, upper, lower) (min(upper, max(x, lower)))
 
+#define ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
+
 #endif /* DEFINES_H */
