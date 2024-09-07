@@ -5,7 +5,7 @@
 #include "logger.h"
 
 Snake *createSnake(u64 w, u64 h) {
-    Snake *p = slMalloc(sizeof(Snake));
+    Snake *p = slAlloc(sizeof(Snake));
     p->body = createOuroboros(w * h);
     p->grid = createGrid(w * h);
     p->width = w;

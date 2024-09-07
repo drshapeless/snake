@@ -13,9 +13,9 @@
 #define BITNSLOTS(nb) ((nb + CHAR_BIT - 1) / CHAR_BIT)
 
 Grid *createGrid(u64 size) {
-    Grid *p = slMalloc(sizeof(Grid));
+    Grid *p = slAlloc(sizeof(Grid));
     int temp = BITNSLOTS(size);
-    p->data = slMalloc(sizeof(u8) * temp);
+    p->data = slAlloc(sizeof(u8) * temp);
     p->size = size;
     memset(p->data, 0, temp);
 

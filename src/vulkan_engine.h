@@ -98,4 +98,10 @@ typedef struct Vertex {
     vec2 texCoord;
 } Vertex;
 
+typedef struct UniformBufferObject {
+    mat4 model;
+    mat4 view;
+    mat4 proj;
+} UniformBufferObject;
+
 #endif /* VULKAN_ENGINE_H */

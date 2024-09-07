@@ -16,7 +16,7 @@ char *readfile(const char *filename, unsigned int *length) {
     int len = ftell(fp);
     fseek(fp, 0, 0);
 
-    char *buffer = slMalloc(sizeof(char) * len);
+    char *buffer = slAlloc(sizeof(char) * len);
     size_t ret = fread(buffer, sizeof(char), len, fp);
     if (ret == 0) {
         fprintf(stderr, "fread fucked up, do something in readfile function\n");

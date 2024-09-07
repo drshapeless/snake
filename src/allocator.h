@@ -3,7 +3,7 @@
 
 #include "defines.h"
 
-void *slMalloc(u64 size);
+void *slAlloc(u64 size);
 void *slRealloc(void *ptr, u64 size);
 void slFree(void *ptr);
 

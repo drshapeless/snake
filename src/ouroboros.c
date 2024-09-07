@@ -6,8 +6,8 @@
 #include <strings.h>
 
 Ouroboros *createOuroboros(u64 size) {
-    Ouroboros *p = slMalloc(sizeof(Ouroboros));
-    p->data = slMalloc(sizeof(u64) * size);
+    Ouroboros *p = slAlloc(sizeof(Ouroboros));
+    p->data = slAlloc(sizeof(u64) * size);
     p->max = size;
     ouroborosReset(p);
 

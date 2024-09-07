@@ -8,6 +8,7 @@
 #include "allocator.h"
 #include "config.h"
 #include "helper.h"
+#include "vk_mem_alloc.h"
 
 void createInstance(VkInstance *instance);
 void setupDebugMessager(VulkanEngine *engine);
@@ -27,13 +28,20 @@ void createFramebuffers(VulkanEngine *engine);
 void createTextureImage(VulkanEngine *engine, const char *filename);
 void createTextureImageView(VulkanEngine *engine);
 void createTextureSampler(VulkanEngine *engine);
+void createVertexBuffer(VulkanEngine *engine, Vertex *vertices,
+                        u64 verticesSize);
+void createIndexBuffer(VulkanEngine *engine, u32 *indices, u64 indicesSize);
+void createUniformBuffers(VulkanEngine *engine);
+void createDescriptorPool(VulkanEngine *engine);
+void createDescriptorSets(VulkanEngine *engine);
+void createSyncObjects(VulkanEngine *engine);
 
 void DestroyDebugUtilsMessengerEXT(VkInstance instance,
                                    VkDebugUtilsMessengerEXT debugMessenger,
                                    const VkAllocationCallbacks *pAllocator);
 
 VulkanEngine *createVulkanEngine(SDL_Window *window) {
-    VulkanEngine *engine = slMalloc(sizeof(VulkanEngine));
+    VulkanEngine *engine = slAlloc(sizeof(VulkanEngine));
     engine->window = window;
     initVulkan(engine);
     return engine;
@@ -57,6 +65,14 @@ void initVulkan(VulkanEngine *e) {
     createTextureImageView(e);
     createTextureSampler(e);
 
+    /* create vertex buffer */
+    /* create index buffer */
+    /* create uniform buffer */
+
+    createDescriptorPool(e);
+    createDescriptorSets(e);
+    createSyncObjects(e);
+
     createGraphicsPipeline(e, "shader_vert.spv", "shader_frag.spv");
 }
 
@@ -75,7 +91,7 @@ bool checkValidationLayerSupport() {
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, NULL);
     VkLayerProperties *availableLayers =
-        slMalloc(sizeof(VkLayerProperties) * layerCount);
+        slAlloc(sizeof(VkLayerProperties) * layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
 
     bool isSupport = true;
@@ -108,7 +124,7 @@ const char **getRequiredExtensions(u32 *extension_count) {
     sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
 
     *extension_count = sdlExtensionCount;
-    const char **extensions = slMalloc(sizeof(char **) * sdlExtensionCount);
+    const char **extensions = slAlloc(sizeof(char **) * sdlExtensionCount);
 
     if (enableValidationLayers) {
         extensions = slRealloc(extensions, *extension_count + 1);
@@ -158,7 +174,7 @@ void createInstance(VkInstance *instance) {
 
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = WINDOW_TITLE;
+    appInfo.pApplicationName = APPLICATION_NAME;
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName = "Shapeless Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -1299,5 +1315,225 @@ void createTextureSampler(VulkanEngine *engine) {
                         &engine->textureSampler) != VK_SUCCESS) {
         ERROR("failed to create texture sampler!");
         exit(EXIT_FAILURE);
+    }
+}
+
+void copyBuffer(VulkanEngine *engine, VkBuffer srcBuffer, VkBuffer dstBuffer,
+                VkDeviceSize size) {
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands(engine);
+
+    VkBufferCopy copyRegion = { 0 };
+    copyRegion.srcOffset = 0; // Optional
+    copyRegion.dstOffset = 0; // Optional
+    copyRegion.size = size;
+    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+    endSingleTimeCommands(engine, commandBuffer);
+}
+
+void createVertexBuffer(VulkanEngine *engine, Vertex *vertices,
+                        u64 verticesSize) {
+    VkDeviceSize bufferSize = verticesSize;
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    createBuffer(engine, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                 &stagingBuffer, &stagingBufferMemory);
+
+    void *data;
+    vkMapMemory(engine->device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, vertices, (size_t)bufferSize);
+    vkUnmapMemory(engine->device, stagingBufferMemory);
+
+    createBuffer(engine, bufferSize,
+                 VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &engine->vertexBuffer,
+                 &engine->vertexBufferMemory);
+
+    copyBuffer(engine, stagingBuffer, engine->vertexBuffer, bufferSize);
+    vkDestroyBuffer(engine->device, stagingBuffer, NULL);
+    vkFreeMemory(engine->device, stagingBufferMemory, NULL);
+}
+
+void createIndexBuffer(VulkanEngine *engine, u32 *indices, u64 indicesSize) {
+    VkDeviceSize bufferSize = indicesSize;
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    createBuffer(engine, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                 &stagingBuffer, &stagingBufferMemory);
+
+    void *data;
+    vkMapMemory(engine->device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, indices, (size_t)bufferSize);
+    vkUnmapMemory(engine->device, stagingBufferMemory);
+
+    createBuffer(engine, bufferSize,
+                 VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                     VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &engine->indexBuffer,
+                 &engine->indexBufferMemory);
+
+    copyBuffer(engine, stagingBuffer, engine->indexBuffer, bufferSize);
+
+    vkDestroyBuffer(engine->device, stagingBuffer, NULL);
+    vkFreeMemory(engine->device, stagingBufferMemory, NULL);
+}
+
+void createUniformBuffers(VulkanEngine *engine) {
+    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+    engine->uniformBuffers = malloc(sizeof(VkBuffer) * MAX_FRAMES_IN_FLIGHT);
+    engine->uniformBufferCount = MAX_FRAMES_IN_FLIGHT;
+    engine->uniformBuffersMemory =
+        malloc(sizeof(VkDeviceMemory) * MAX_FRAMES_IN_FLIGHT);
+    engine->uniformBuffersMemoryCount = MAX_FRAMES_IN_FLIGHT;
+    engine->uniformBuffersMapped =
+        malloc(sizeof(void *) * MAX_FRAMES_IN_FLIGHT);
+    engine->uniformBuffersMappedCount = MAX_FRAMES_IN_FLIGHT;
+
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        createBuffer(engine, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                         VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                     &engine->uniformBuffers[i],
+                     &engine->uniformBuffersMemory[i]);
+
+        vkMapMemory(engine->device, engine->uniformBuffersMemory[i], 0,
+                    bufferSize, 0, &engine->uniformBuffersMapped[i]);
+    }
+}
+
+/* TODO: This needs a big rewrite */
+void updateUniformBuffer(VulkanEngine *engine, uint32_t currentImage) {
+    /* Uint64 time = SDL_GetTicks() - engine->startTime; */
+    /* double timet = time / 400.0f; */
+
+    UniformBufferObject ubo = { 0 };
+    glm_mat4_identity(ubo.model);
+    glm_rotate(ubo.model, glm_rad(90.0f), (vec3){ 0.0, 0.0, 1.0 });
+
+    glm_lookat((vec3){ 2.0f, 2.0f, 2.0f }, (vec3){ 0.0f, 0.0f, 0.0f },
+               (vec3){ 0.0f, 0.0f, 1.0f }, ubo.view);
+
+    glm_perspective(glm_rad(45.0f),
+                    (float)engine->swapChainExtent.width /
+                        (float)engine->swapChainExtent.height,
+                    0.1f, 10.0f, ubo.proj);
+
+    ubo.proj[1][1] *= -1;
+    memcpy(engine->uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+}
+
+void createDescriptorPool(VulkanEngine *engine) {
+    VkDescriptorPoolSize poolSizes[2] = { 0 };
+    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSizes[0].descriptorCount = (uint32_t)MAX_FRAMES_IN_FLIGHT;
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[1].descriptorCount = (uint32_t)MAX_FRAMES_IN_FLIGHT;
+
+    VkDescriptorPoolCreateInfo poolInfo = { 0 };
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = sizeof(poolSizes) / sizeof(VkDescriptorPoolSize);
+    poolInfo.pPoolSizes = poolSizes;
+    poolInfo.maxSets = (uint32_t)MAX_FRAMES_IN_FLIGHT;
+    if (vkCreateDescriptorPool(engine->device, &poolInfo, NULL,
+                               &engine->descriptorPool) != VK_SUCCESS) {
+        ERROR("failed to create descriptor pool!");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void createDescriptorSets(VulkanEngine *engine) {
+    VkDescriptorSetLayout layouts[MAX_FRAMES_IN_FLIGHT];
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        layouts[i] = engine->descriptorSetLayout;
+    }
+
+    VkDescriptorSetAllocateInfo allocInfo = { 0 };
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = engine->descriptorPool;
+    allocInfo.descriptorSetCount = (uint32_t)MAX_FRAMES_IN_FLIGHT;
+    allocInfo.pSetLayouts = layouts;
+
+    engine->descriptorSets =
+        malloc(sizeof(VkDescriptorSet) * MAX_FRAMES_IN_FLIGHT);
+    engine->descriptorSetCount = MAX_FRAMES_IN_FLIGHT;
+    if (vkAllocateDescriptorSets(engine->device, &allocInfo,
+                                 engine->descriptorSets) != VK_SUCCESS) {
+        ERROR("failed to allocate descriptor sets!");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        VkDescriptorBufferInfo bufferInfo = { 0 };
+        bufferInfo.buffer = engine->uniformBuffers[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorImageInfo imageInfo = {};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = engine->textureImageView;
+        imageInfo.sampler = engine->textureSampler;
+
+        VkWriteDescriptorSet descriptorWrites[2] = { 0 };
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = engine->descriptorSets[i];
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+        descriptorWrites[0].pImageInfo = NULL; // Optional
+        descriptorWrites[0].pTexelBufferView = NULL; // Optional
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = engine->descriptorSets[i];
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType =
+            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(engine->device,
+                               sizeof(descriptorWrites) /
+                                   sizeof(VkWriteDescriptorSet),
+                               descriptorWrites, 0, NULL);
+    }
+}
+
+void createSyncObjects(VulkanEngine *engine) {
+    engine->imageAvailableSemaphores =
+        malloc(sizeof(VkSemaphore) * MAX_FRAMES_IN_FLIGHT);
+    engine->imageAvailableSemaphoreCount = MAX_FRAMES_IN_FLIGHT;
+    engine->renderFinishedSemaphores =
+        malloc(sizeof(VkSemaphore) * MAX_FRAMES_IN_FLIGHT);
+    engine->renderFinishedSemaphoreCount = MAX_FRAMES_IN_FLIGHT;
+    engine->inFlightFences = malloc(sizeof(VkFence) * MAX_FRAMES_IN_FLIGHT);
+    engine->inFlightFenceCount = MAX_FRAMES_IN_FLIGHT;
+
+    VkSemaphoreCreateInfo semaphoreInfo = { 0 };
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkFenceCreateInfo fenceInfo = { 0 };
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        if (vkCreateSemaphore(engine->device, &semaphoreInfo, NULL,
+                              &engine->imageAvailableSemaphores[i]) !=
+                VK_SUCCESS ||
+            vkCreateSemaphore(engine->device, &semaphoreInfo, NULL,
+                              &engine->renderFinishedSemaphores[i]) !=
+                VK_SUCCESS ||
+            vkCreateFence(engine->device, &fenceInfo, NULL,
+                          &engine->inFlightFences[i]) != VK_SUCCESS) {
+            ERROR("failed to create synchronization objects for a frame!");
+            exit(EXIT_FAILURE);
+        }
     }
 }

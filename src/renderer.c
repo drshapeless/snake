@@ -3,15 +3,19 @@
 #include "logger.h"
 #include "allocator.h"
 
+#include <stdlib.h>
+
 Renderer *createRenderer(SDL_Window *window) {
     SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
     if (renderer == NULL) {
         ERROR("%s", SDL_GetError());
+        exit(EXIT_FAILURE);
         return NULL;
     }
 
-    Renderer *p = slMalloc(sizeof(Renderer));
+    Renderer *p = slAlloc(sizeof(Renderer));
     p->r = renderer;
+    p->frame_number = 0;
     return p;
 }
 
@@ -42,4 +46,8 @@ void rendererClear(Renderer *p) {
 
 void rendererPresent(Renderer *p) {
     SDL_RenderPresent(p->r);
+}
+
+void rendererEndDraw(Renderer *p) {
+    p->frame_number += 1;
 }

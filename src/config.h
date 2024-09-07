@@ -3,7 +3,7 @@
 
 #include "defines.h"
 
-static const char WINDOW_TITLE[] = "snake";
+static const char APPLICATION_NAME[] = "snake";
 static const u64 WINDOW_WIDTH = 800;
 static const u64 WINDOW_HEIGHT = 600;
 
@@ -19,11 +19,12 @@ static const SDL_Color COLOR_RED = { 255, 0, 0, 255 };
 #ifdef NDEBUG
 static const bool enableValidationLayers = false;
 #else
+#define DEBUG
 static const bool enableValidationLayers = true;
 #endif
 
 static const char *validationLayers[] = { "VK_LAYER_KHRONOS_validation" };
-static const i32 validationLayerCount = 1;
+static const u32 validationLayerCount = 1;
 
 #ifdef __APPLE__
 #include <vulkan/vulkan_beta.h>

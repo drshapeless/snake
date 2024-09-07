@@ -17,9 +17,9 @@ void initSDL() {
 
 Application *createApplication() {
     initSDL();
-    Application *app = slMalloc(sizeof(Application));
-    app->window = SDL_CreateWindow(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT,
-                                   SDL_WINDOW_RESIZABLE);
+    Application *app = slAlloc(sizeof(Application));
+    app->window = SDL_CreateWindow(APPLICATION_NAME, WINDOW_WIDTH,
+                                   WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE);
 
     if (app->window == NULL) {
         ERROR("%s", SDL_GetError());

@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-void *slMalloc(u64 size) {
+void *slAlloc(u64 size) {
     return malloc(size);
 }
 
